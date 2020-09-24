@@ -4,8 +4,8 @@ public class Main {
 
     public static void main(String[] args)
     {
-	    ConsoleView view = new ConsoleView();
-//	    GuiView view = new GuiView();
+//	    ConsoleView view = new ConsoleView();
+	    GuiView view = new GuiView();
 
 	    Presenter p = new Presenter(view);
 	    p.run();
