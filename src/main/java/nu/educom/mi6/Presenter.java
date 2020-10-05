@@ -11,36 +11,34 @@ public class Presenter{
         this.model  = new Model();
 		this.view = view;
     }
-    
-    public void login() {
-    }
- 
+
     public void run() {
-		
+        
         while(!stopped) {
             view.triggerLogin();
-            if (view.getResult()) {
-                String serviceNumberStr = view.getServiceNumber();
-                if (model.checkExit(serviceNumberStr)) {
-                    this.stopped = true;
-                    break;
-                }
-                if ((model.validateServiceNumber(serviceNumberStr)) && (!model.onBlacklist(serviceNumberStr))) {
-                    if (view.checkView().equals("console")) {
-                        view.showMessage("Enter the secret code:");
-                    }
-                    String secretCode = view.getSecretCode();
-                    if (model.validateSecretCode(secretCode)) {
-                        String paddedSecretNumber = model.padLeftZeros(serviceNumberStr,3);
-                        view.showMessage("Welcome agent " + paddedSecretNumber);
-                    } else {
-                        view.showMessage("ACCESS DENIED");
-                        model.addToBlacklist(serviceNumberStr);
-                    }
-                } else {
+            int serviceNumber = model.convertServiceNumber(view.getServiceNumber());
+            if (!(model.validateServiceNumber(serviceNumber))) {
+                view.showMessage("ACCESS DENIED");
+            } else {
+                model.getAgent(serviceNumber);
+                if (!model.validateLoginAttempts()) {
                     view.showMessage("ACCESS DENIED");
+                } else {
+                    if (!model.validateSecretCode(view.getSecretCode()) || !model.validateActivity()) {
+                        model.createLoginAttempt(false);
+                        view.showMessage("<html><div style='text-align:center'> ACCESS DENIED <br> " + 
+                                             "Try again at: " + model.getNewAllowedToLoginTime() + "</div></html>");      
+                        } else {
+                            view.showMessage("<html><div style='text-align:center'> Welcome agent " + 
+                                    model.getPaddedServiceNumberStr() + 
+                                    ", <br>" + model.getLicenseToKillMessage() + 
+                                    "</div></html>");       
+                            view.showTable(model.getLastLoginAttempts());
+                            model.createLoginAttempt(true);  
+                            }
                 }
-            }
+            } 
         }
     }
 }
+
